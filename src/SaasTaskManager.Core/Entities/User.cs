@@ -1,3 +1,5 @@
+using SaasTaskManager.Core.Common;
+
 namespace SaasTaskManager.Core.Entities;
 
 public class User
@@ -15,14 +17,14 @@ public class User
 
     private User() { }
 
-    public static User Create(string email, string name, string hashedPassword)
+    public static User Create(string email, string name, string plainTextPassword)
     {
         return new User
         {
             Id = Guid.NewGuid(),
             Email = email.ToLowerInvariant(),
             Name = name,
-            HashedPassword = hashedPassword,
+            HashedPassword = Utils.HashPassword(email, plainTextPassword),
             CreatedAt = DateTime.UtcNow,
             IsEmailVerified = false,
             IsActive = true
