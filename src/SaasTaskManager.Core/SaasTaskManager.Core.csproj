@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Enums\" />
+    <Compile Remove="Models\IUserRepository.cs" />
   </ItemGroup>
 
 </Project>
