@@ -7,5 +7,6 @@ public record CreateUserResponse
     public string Name { get; init; }
     public bool IsEmailVerified { get; init; }
     public DateTime CreatedAt { get; init; }
-    
 }
+
+public record LoginResponse(string Token);
