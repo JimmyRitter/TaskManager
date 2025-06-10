@@ -1,0 +1,23 @@
+﻿POST http://localhost:5161/Users/verify-email
+User-Agent: IntelliJ HTTP Client/JetBrains Rider 2024.3.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+###
+
+POST http://localhost:5161/Users
+User-Agent: IntelliJ HTTP Client/JetBrains Rider 2024.3.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+###
+
+GET http://localhost:5161/Users
+User-Agent: IntelliJ HTTP Client/JetBrains Rider 2024.3.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+###
+
