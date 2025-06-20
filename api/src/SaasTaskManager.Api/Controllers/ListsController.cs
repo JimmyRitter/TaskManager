@@ -37,4 +37,14 @@ public class ListsController(IListService listService) : ControllerBase
 
         return Ok(ApiResponse<CreateListResponse>.Success(result.Value, "List created successfully"));
     }
+
+    [Authorize]
+    [HttpDelete("delete")]
+    public async Task<ActionResult<ApiResponse>> DeleteList([FromBody] DeleteListRequest command)
+    {
+        var result = await listService.DeleteListAsync(command);
+        if (!result.IsSuccess)
+            return BadRequest(ApiResponse.Failure(result.Error));
+        return Ok(ApiResponse.Success("List deleted successfully"));
+    }
 }

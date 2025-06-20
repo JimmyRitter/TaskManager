@@ -12,10 +12,6 @@ public class ListService(ApplicationDbContext dbContext) : IListService
         CancellationToken cancellationToken = default)
     {
         var lists = await dbContext.Lists.Where((x) => x.OwnerId == userId).ToListAsync(cancellationToken);
-        if (lists.Count == 0)
-        {
-            return Result<List<GetUsersListsResponse>>.Failure("No lists found");
-        }
 
         var returnLists = new List<GetUsersListsResponse>();
 
