@@ -3,7 +3,7 @@ services:
     image: postgres:16
     container_name: saas-task-manager-db
     env_file:
-      - /.env
+      - ./.env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

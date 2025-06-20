@@ -39,6 +39,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Add this before builder.Build()
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // Vue dev server
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
 var app = builder.Build();
 
@@ -48,6 +59,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseCors("AllowWebApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
