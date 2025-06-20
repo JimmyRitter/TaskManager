@@ -27,7 +27,7 @@ public class ListService(ApplicationDbContext dbContext) : IListService
         return Result<List<GetUsersListsResponse>>.Success(returnLists);
     }
 
-    public async Task<Result> CreateListAsync(CreateListRequest command, Guid ownerId,
+    public async Task<Result<CreateListResponse>> CreateListAsync(CreateListRequest command, Guid ownerId,
         CancellationToken cancellationToken = default)
     {
         try
@@ -37,11 +37,12 @@ public class ListService(ApplicationDbContext dbContext) : IListService
             await dbContext.Lists.AddAsync(list, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+            var response = new CreateListResponse(list.Id, list.Name, list.Description);
+            return Result<CreateListResponse>.Success(response);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Failed to create list: {ex.Message}");
+            return Result<CreateListResponse>.Failure($"Failed to create list: {ex.Message}");
         }
     }
 

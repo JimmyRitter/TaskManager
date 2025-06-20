@@ -8,7 +8,7 @@ public interface IListService
 {
     Task<Result<List<GetUsersListsResponse>>> GetUsersListsAsync(Guid userId, CancellationToken cancellationToken = default);
 
-    Task<Result> CreateListAsync(CreateListRequest command, Guid ownerId,
+    Task<Result<CreateListResponse>> CreateListAsync(CreateListRequest command, Guid ownerId,
         CancellationToken cancellationToken = default);
 
     Task<Result> DeleteListAsync(DeleteListRequest command,

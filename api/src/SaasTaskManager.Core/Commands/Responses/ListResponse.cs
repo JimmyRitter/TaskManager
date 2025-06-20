@@ -12,6 +12,12 @@ public record GetUsersListsResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
+public record CreateListResponse(
+    Guid Id,
+    string Name,
+    string Description
+);
+
 // public record CreateListResponse(
 //     string Name,
 //     string Description,

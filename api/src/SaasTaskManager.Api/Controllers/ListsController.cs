@@ -27,14 +27,14 @@ public class ListsController(IListService listService) : ControllerBase
     
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<ApiResponse>> CreateList([FromBody] CreateListRequest command)
+    public async Task<ActionResult<ApiResponse<CreateListResponse>>> CreateList([FromBody] CreateListRequest command)
     {
         var ownerId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
         var result = await listService.CreateListAsync(command, ownerId);
 
         if (!result.IsSuccess)
-            return BadRequest(ApiResponse.Failure(result.Error));
+            return BadRequest(ApiResponse<CreateListResponse>.Failure(result.Error));
 
-        return Ok(ApiResponse.Success("List created successfully"));
+        return Ok(ApiResponse<CreateListResponse>.Success(result.Value, "List created successfully"));
     }
 }
