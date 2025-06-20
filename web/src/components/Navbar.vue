@@ -4,9 +4,9 @@
       <div class="flex justify-between items-center h-16">
         <!-- Logo/Brand -->
         <div class="flex-shrink-0 flex items-center">
-          <RouterLink to="/" class="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200">
-            TaskManager
-          </RouterLink>
+                  <RouterLink to="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600 transition-colors duration-200">
+          TaskManager
+        </RouterLink>
         </div>
 
         <!-- Desktop Navigation -->
@@ -15,24 +15,24 @@
             <RouterLink 
               v-if="isAuthenticated" 
               to="/dashboard" 
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              :class="{ 'text-blue-600 bg-blue-50': $route.path === '/dashboard' }"
+              class="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              :class="{ 'text-orange-600 bg-orange-50': $route.path === '/dashboard' }"
             >
               Dashboard
             </RouterLink>
             <RouterLink 
               v-if="isAuthenticated" 
               to="/pomodoro" 
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              :class="{ 'text-blue-600 bg-blue-50': $route.path === '/pomodoro' }"
+              class="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              :class="{ 'text-orange-600 bg-orange-50': $route.path === '/pomodoro' }"
             >
               Pomodoro
             </RouterLink>
             <!-- <RouterLink 
               v-if="!isAuthenticated" 
               to="/about" 
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              :class="{ 'text-blue-600 bg-blue-50': $route.path === '/about' }"
+              class="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              :class="{ 'text-orange-600 bg-orange-50': $route.path === '/about' }"
             >
               About
             </RouterLink> -->
@@ -46,12 +46,12 @@
               <!-- User dropdown -->
               <button
                 @click="toggleDropdown"
-                class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
                 id="user-menu"
                 aria-expanded="false"
                 aria-haspopup="true"
               >
-                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                <div class="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-medium">
                   {{ auth.user?.name?.charAt(0) || 'U' }}
                 </div>
                 <span class="ml-2 text-gray-700 font-medium">{{ auth.user?.name || 'User' }}</span>
@@ -98,13 +98,13 @@
             <div v-else class="flex items-center space-x-4">
               <RouterLink 
                 to="/login" 
-                class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                class="text-gray-700 hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Sign in
               </RouterLink>
               <RouterLink 
                 to="/register" 
-                class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                class="bg-orange-600 text-white hover:bg-orange-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Sign up
               </RouterLink>

@@ -13,6 +13,6 @@ import Navbar from './components/Navbar.vue'
 <style scoped>
 main {
   min-height: calc(100vh - 4rem);
-  padding: 2rem 1rem;
+  /* padding: 2rem 1rem; */
 }
 </style>
