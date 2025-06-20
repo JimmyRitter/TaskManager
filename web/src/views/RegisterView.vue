@@ -16,13 +16,14 @@
       </div>
       <button type="submit" :disabled="auth.loading">{{ auth.loading ? 'Registering...' : 'Register' }}</button>
       <p v-if="auth.error" class="error">{{ auth.error }}</p>
+      <p v-if="success" class="success">Registration successful! Redirecting to login...</p>
     </form>
     <p>Already have an account? <RouterLink to="/login">Login</RouterLink></p>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -31,16 +32,15 @@ const email = ref('')
 const password = ref('')
 const auth = useAuthStore()
 const router = useRouter()
+const success = ref(false)
 
 async function onRegister() {
   await auth.register({ name: name.value, email: email.value, password: password.value })
-}
-
-watch(() => auth.token, (token) => {
-  if (token) {
-    router.push('/dashboard')
+  if (!auth.error) {
+    success.value = true
+    setTimeout(() => router.push('/login'), 1200)
   }
-})
+}
 </script>
 
 <style scoped>
@@ -84,6 +84,11 @@ watch(() => auth.token, (token) => {
 }
 .error {
   color: #d32f2f;
+  margin-top: 1rem;
+  text-align: center;
+}
+.success {
+  color: #388e3c;
   margin-top: 1rem;
   text-align: center;
 }

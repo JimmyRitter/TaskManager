@@ -92,7 +92,13 @@ public class UserService(ApplicationDbContext context, IConfiguration configurat
 
             var token = GenerateJwtToken(user);
 
-            var response = new LoginResponse(token);
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email
+            };
+            var response = new LoginResponse(token, userDto);
             return Result<LoginResponse>.Success(response);
         }
         catch (Exception ex)

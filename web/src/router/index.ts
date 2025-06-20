@@ -3,6 +3,7 @@ import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import PomodoroView from '../views/PomodoroView.vue'
 
 const isAuthenticated = () => {
   // TODO: Replace with real auth check
@@ -31,6 +32,12 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/pomodoro',
+      name: 'pomodoro',
+      component: PomodoroView,
       meta: { requiresAuth: true },
     },
   ],

@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
-// Mock auth state (replace with Pinia store later)
-const isAuthenticated = computed(() => !!localStorage.getItem('auth_token'))
+const auth = useAuthStore()
 const router = useRouter()
 
+const dropdownOpen = ref(false)
+
 function logout() {
-  localStorage.removeItem('auth_token')
+  auth.logout()
+  dropdownOpen.value = false
   router.push('/login')
+}
+
+function toggleDropdown() {
+  dropdownOpen.value = !dropdownOpen.value
+}
+function closeDropdown() {
+  dropdownOpen.value = false
 }
 </script>
 
@@ -18,10 +28,21 @@ function logout() {
       <div class="navbar-content">
         <RouterLink to="/">TaskManager</RouterLink>
         <div class="nav-links">
-          <RouterLink v-if="!isAuthenticated" to="/login">Login</RouterLink>
-          <RouterLink v-if="!isAuthenticated" to="/register">Register</RouterLink>
-          <RouterLink v-if="isAuthenticated" to="/dashboard">Dashboard</RouterLink>
-          <button v-if="isAuthenticated" @click="logout">Logout</button>
+          <RouterLink v-if="auth.token" to="/dashboard">Todo Lists</RouterLink>
+          <RouterLink v-if="auth.token" to="/pomodoro">Pomodoro Timer</RouterLink>
+          <RouterLink v-if="!auth.token" to="/login">Login</RouterLink>
+          <RouterLink v-if="!auth.token" to="/register">Register</RouterLink>
+          <div v-if="auth.token && auth.user" class="user-dropdown" @mouseleave="closeDropdown">
+            <button class="user-btn" @click="toggleDropdown">
+              Welcome, {{ auth.user.name }}
+              <span class="arrow" :class="{ open: dropdownOpen }">▼</span>
+            </button>
+            <div v-if="dropdownOpen" class="dropdown-menu">
+              <RouterLink to="/profile" @click="closeDropdown">Profile</RouterLink>
+              <RouterLink to="/change-password" @click="closeDropdown">Change Password</RouterLink>
+              <button @click="logout">Log out</button>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -63,5 +84,57 @@ function logout() {
 }
 main {
   min-height: 80vh;
+}
+.user-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.user-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.arrow {
+  font-size: 0.9em;
+  transition: transform 0.2s;
+}
+.arrow.open {
+  transform: rotate(180deg);
+}
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 2.2rem;
+  background: white;
+  color: #222;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(60,60,60,0.12);
+  min-width: 160px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+}
+.dropdown-menu a,
+.dropdown-menu button {
+  padding: 0.7rem 1.2rem;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  background: #f2f2f2;
 }
 </style>

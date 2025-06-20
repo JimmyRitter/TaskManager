@@ -2,11 +2,18 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import * as AuthService from '@/services/auth'
 
+const USER_KEY = 'auth_user'
+
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<AuthService.AuthResponse['user'] | null>(null)
+  const user = ref<AuthService.AuthResponse['user'] | null>(getStoredUser())
   const token = ref<string | null>(AuthService.getToken())
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  function getStoredUser() {
+    const stored = localStorage.getItem(USER_KEY)
+    return stored ? JSON.parse(stored) : null
+  }
 
   async function login(payload: AuthService.LoginPayload) {
     loading.value = true
@@ -15,6 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await AuthService.login(payload)
       user.value = res.user
       token.value = res.token
+      localStorage.setItem(USER_KEY, JSON.stringify(res.user))
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Login failed'
     } finally {
@@ -26,9 +34,8 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const res = await AuthService.register(payload)
-      user.value = res.user
-      token.value = res.token
+      await AuthService.register(payload)
+      // Do not set user or token here; registration does not return them
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Registration failed'
     } finally {
@@ -40,6 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     AuthService.logout()
     user.value = null
     token.value = null
+    localStorage.removeItem(USER_KEY)
   }
 
   return { user, token, loading, error, login, register, logout }

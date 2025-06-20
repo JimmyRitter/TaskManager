@@ -9,4 +9,11 @@ public record CreateUserResponse
     public DateTime CreatedAt { get; init; }
 }
 
-public record LoginResponse(string Token);
+public record LoginResponse(string Token, UserDto User);
+
+public record UserDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; }
+    public string Email { get; init; }
+}
