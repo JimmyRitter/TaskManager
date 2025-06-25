@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import * as AuthService from '@/services/auth'
+import { setAuthToken, setLogoutCallback, setRedirectCallback } from '@/services/api'
 
 const USER_KEY = 'auth_user'
 
@@ -9,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(AuthService.getToken())
   const loading = ref(false)
   const error = ref<string | null>(null)
+
 
   function getStoredUser() {
     const stored = localStorage.getItem(USER_KEY)
@@ -48,7 +50,40 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     token.value = null
     localStorage.removeItem(USER_KEY)
+    setAuthToken(null) // Clear API authorization header
   }
 
-  return { user, token, loading, error, login, register, logout }
+
+
+  // Initialize auth state and set up token validation
+  function initializeAuth(redirectToLogin?: () => void) {
+    // Set auth token for API if we have one
+    if (token.value) {
+      setAuthToken(token.value)
+    }
+
+    // Set up automatic logout callback for API interceptor
+    setLogoutCallback(() => {
+      user.value = null
+      token.value = null
+      localStorage.removeItem(USER_KEY)
+      setAuthToken(null)
+    })
+
+    // Set up redirect callback for API interceptor
+    if (redirectToLogin) {
+      setRedirectCallback(redirectToLogin)
+    }
+  }
+
+  return { 
+    user, 
+    token, 
+    loading, 
+    error,
+    login, 
+    register, 
+    logout,
+    initializeAuth 
+  }
 }) 

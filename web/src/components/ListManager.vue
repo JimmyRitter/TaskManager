@@ -1,39 +1,158 @@
 <template>
   <div>
-    <div class="lists-header">
-      <button @click="showCreateList = true">+ Create List</button>
+    <!-- Empty State -->
+    <div v-if="lists.length === 0" class="text-center py-16">
+      <div class="mb-8">
+        <svg class="w-24 h-24 text-orange-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+        </svg>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">No lists yet</h3>
+        <p class="text-gray-600 mb-8">Create your first list to start organizing your tasks</p>
+      </div>
+      <button 
+        @click="showCreateList = true"
+        class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+      >
+        Create Your First List
+      </button>
     </div>
-    <div v-if="lists.length === 0" class="empty-state">
-      <p>No lists yet.</p>
-      <button @click="showCreateList = true">Create your first list</button>
+
+    <!-- Lists Grid -->
+    <div v-else>
+      <!-- Header with Create Button -->
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Your Lists</h2>
+        <button 
+          @click="showCreateList = true"
+          class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+        >
+          + Create List
+        </button>
+      </div>
+
+      <!-- Lists Grid - Max 3 per row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div 
+          v-for="list in lists" 
+          :key="list.id" 
+          class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+        >
+          <!-- List Header -->
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 truncate pr-2">{{ list.name }}</h3>
+            <button 
+              @click="onDeleteList(list)"
+              class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors duration-200"
+              title="Delete list"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- List Description -->
+          <p v-if="list.description" class="text-gray-600 text-sm mb-4">{{ list.description }}</p>
+
+          <!-- Tasks -->
+          <div v-if="list.tasks && list.tasks.length > 0" class="mb-4">
+            <div class="space-y-2">
+              <div 
+                v-for="task in list.tasks.slice(0, 3)" 
+                :key="task.id"
+                class="text-sm text-gray-700 flex items-center"
+              >
+                <div class="w-2 h-2 bg-orange-400 rounded-full mr-2 flex-shrink-0"></div>
+                <span class="truncate">{{ task.description }}</span>
+              </div>
+              <div v-if="list.tasks.length > 3" class="text-xs text-gray-500 ml-4">
+                +{{ list.tasks.length - 3 }} more tasks
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty Tasks State -->
+          <div v-else class="mb-4">
+            <div class="text-center py-4">
+              <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <p class="text-sm text-gray-500 mb-3">No tasks yet</p>
+              <button 
+                @click="addTask(list)"
+                class="text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 px-3 py-1 rounded transition-colors duration-200"
+              >
+                Add your first task
+              </button>
+            </div>
+          </div>
+
+          <!-- Task Count -->
+          <div class="border-t border-gray-100 pt-3">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-gray-500">
+                {{ list.tasks?.length || 0 }} {{ (list.tasks?.length || 0) === 1 ? 'task' : 'tasks' }}
+              </span>
+              <button 
+                v-if="list.tasks && list.tasks.length > 0"
+                @click="addTask(list)"
+                class="text-orange-600 hover:text-orange-700 font-medium hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
+              >
+                + Add task
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <ul v-else class="lists">
-      <li v-for="list in lists" :key="list.id" class="list-item">
-        <div class="list-header">
-          <h3>{{ list.name }}</h3>
-          <button class="delete-btn" @click="onDeleteList(list)">Delete</button>
-        </div>
-        <p v-if="list.description" class="list-description">{{ list.description }}</p>
-        <div v-if="list.tasks && list.tasks.length > 0">
-          <ul class="tasks">
-            <li v-for="task in list.tasks" :key="task.id">{{ task.description }}</li>
-          </ul>
-        </div>
-        <div v-else class="empty-tasks">
-          <button @click="addTask(list)">Click here to add your first task</button>
-        </div>
-      </li>
-    </ul>
 
     <!-- Create List Modal -->
-    <div v-if="showCreateList" class="modal-backdrop" @click.self="showCreateList = false">
-      <div class="modal">
-        <h3>Create New List</h3>
-        <form @submit.prevent="createList">
-          <input v-model="newListName" placeholder="List name" required />
-          <textarea v-model="newListDescription" placeholder="Description (optional)" rows="2"></textarea>
-          <button type="submit">Create</button>
-          <button type="button" @click="showCreateList = false">Cancel</button>
+    <div v-if="showCreateList" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showCreateList = false">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Create New List</h3>
+        <form @submit.prevent="createList" class="space-y-4">
+          <div>
+            <label for="listName" class="block text-sm font-medium text-gray-700 mb-2">
+              List Name
+            </label>
+            <input 
+              id="listName"
+              v-model="newListName" 
+              type="text"
+              placeholder="Enter list name" 
+              required 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+            />
+          </div>
+          
+          <div>
+            <label for="listDescription" class="block text-sm font-medium text-gray-700 mb-2">
+              Description (optional)
+            </label>
+            <textarea 
+              id="listDescription"
+              v-model="newListDescription" 
+              placeholder="Brief description of this list" 
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 resize-none"
+            ></textarea>
+          </div>
+          
+          <div class="flex gap-3 pt-4">
+            <button 
+              type="submit"
+              class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-medium hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200"
+            >
+              Create List
+            </button>
+            <button 
+              type="button" 
+              @click="showCreateList = false"
+              class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
     </div>

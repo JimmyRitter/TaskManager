@@ -43,4 +43,6 @@ export function logout() {
 
 export function getToken(): string | null {
   return localStorage.getItem('auth_token')
-} 
+}
+
+ 
