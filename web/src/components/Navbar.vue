@@ -77,12 +77,14 @@
                   aria-orientation="vertical"
                   aria-labelledby="user-menu"
                 >
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200" role="menuitem">
+                  <RouterLink 
+                    to="/profile" 
+                    @click="closeDropdown"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200" 
+                    role="menuitem"
+                  >
                     Profile
-                  </a>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200" role="menuitem">
-                    Settings
-                  </a>
+                  </RouterLink>
                   <button 
                     @click="logout"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200" 
@@ -180,16 +182,13 @@
               </div>
             </div>
             <div class="mt-3 space-y-1">
-              <button 
+              <RouterLink 
+                to="/profile"
+                @click="closeMobileMenu"
                 class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200 w-full text-left"
               >
                 Profile
-              </button>
-              <button 
-                class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200 w-full text-left"
-              >
-                Settings
-              </button>
+              </RouterLink>
               <button 
                 @click="logout"
                 class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200 w-full text-left"
