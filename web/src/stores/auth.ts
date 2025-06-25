@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import * as AuthService from '@/services/auth'
 import { setAuthToken, setLogoutCallback, setRedirectCallback } from '@/services/api'
+import { usePomodoroStore } from './pomodoro'
 
 const USER_KEY = 'auth_user'
 
@@ -51,6 +52,10 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     localStorage.removeItem(USER_KEY)
     setAuthToken(null) // Clear API authorization header
+    
+    // Reset Pomodoro timer when logging out
+    const pomodoroStore = usePomodoroStore()
+    pomodoroStore.reset()
   }
 
 
@@ -68,6 +73,10 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
       localStorage.removeItem(USER_KEY)
       setAuthToken(null)
+      
+      // Reset Pomodoro timer on automatic logout too
+      const pomodoroStore = usePomodoroStore()
+      pomodoroStore.reset()
     })
 
     // Set up redirect callback for API interceptor

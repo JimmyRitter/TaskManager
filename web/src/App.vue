@@ -3,6 +3,7 @@ import { RouterView, useRouter, useRoute } from 'vue-router'
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import Navbar from './components/Navbar.vue'
+import PomodoroWidget from './components/PomodoroWidget.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -28,6 +29,7 @@ onMounted(() => {
   <main>
     <RouterView />
   </main>
+  <PomodoroWidget />
 </template>
 
 <style scoped>
