@@ -48,4 +48,20 @@ public class User
     {
         LastLoginAt = DateTime.UtcNow;
     }
+
+    public bool VerifyPassword(string password)
+    {
+        var hash = Utils.HashPassword(Email, password);
+        return HashedPassword == hash;
+    }
+
+    public void ChangePassword(string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new ArgumentException("New password cannot be empty.", nameof(newPassword));
+        }
+
+        HashedPassword = Utils.HashPassword(Email, newPassword);
+    }
 }

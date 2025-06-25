@@ -17,3 +17,9 @@ public record UserDto
     public string Name { get; init; }
     public string Email { get; init; }
 }
+
+public record ChangePasswordResponse
+{
+    public string Message { get; init; } = "Password changed successfully";
+    public DateTime ChangedAt { get; init; } = DateTime.UtcNow;
+}

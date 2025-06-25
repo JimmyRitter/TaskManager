@@ -102,6 +102,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { passwordService } from '@/services/password'
 
 // Loading states
 const isUpdatingPassword = ref(false)
@@ -148,25 +149,26 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 const updatePassword = async () => {
   isUpdatingPassword.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await passwordService.changePassword({
+      currentPassword: passwordForm.value.currentPassword,
+      newPassword: passwordForm.value.newPassword
+    })
     
-    // Here you would make the actual API call
-    // await api.updatePassword({
-    //   currentPassword: passwordForm.value.currentPassword,
-    //   newPassword: passwordForm.value.newPassword
-    // })
-    
-    // Clear password form
-    passwordForm.value = {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+    if (response.success) {
+      // Clear password form
+      passwordForm.value = {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      
+      showMessage('Password updated successfully!', 'success')
+    } else {
+      showMessage(response.message || 'Failed to update password', 'error')
     }
-    
-    showMessage('Password updated successfully!', 'success')
-  } catch (error) {
-    showMessage('Failed to update password. Please check your current password.', 'error')
+  } catch (error: any) {
+    console.error('Password change error:', error)
+    showMessage(error.message || 'Failed to update password. Please try again.', 'error')
   } finally {
     isUpdatingPassword.value = false
   }

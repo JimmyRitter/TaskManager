@@ -11,4 +11,5 @@ public interface IUserService
 
     Task<Result> VerifyEmailAsync(VerifyEmailRequest command);
     Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<Result<ChangePasswordResponse>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }

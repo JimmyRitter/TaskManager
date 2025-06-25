@@ -52,4 +52,23 @@ public class UsersController(IUserService userService) : ControllerBase
     {
         return Ok("This is a protected endpoint");
     }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult<ApiResponse<ChangePasswordResponse>>> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        // Get user ID from JWT claims
+        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
+        if (userId == null)
+        {
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Failure("Invalid user authentication"));
+        }
+
+        var result = await userService.ChangePasswordAsync(userId, request);
+
+        if (!result.IsSuccess)
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Failure(result.Error));
+
+        return Ok(ApiResponse<ChangePasswordResponse>.Success(result.Value, "Password changed successfully"));
+    }
 }

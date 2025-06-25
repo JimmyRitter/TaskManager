@@ -131,4 +131,63 @@ public class UserService(ApplicationDbContext context, IConfiguration configurat
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public async Task<Result<ChangePasswordResponse>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            {
+                return Result<ChangePasswordResponse>.Failure("Current password is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return Result<ChangePasswordResponse>.Failure("New password is required.");
+            }
+
+            // Get the user
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if (user == null)
+            {
+                return Result<ChangePasswordResponse>.Failure("User not found.");
+            }
+
+            // Verify current password
+            if (!user.VerifyPassword(request.CurrentPassword))
+            {
+                return Result<ChangePasswordResponse>.Failure("Current password is incorrect.");
+            }
+
+            // Validate new password strength
+            var validationResult = Utils.ValidatePasswordStrength(request.NewPassword, user.Email);
+            if (!validationResult.IsValid)
+            {
+                return Result<ChangePasswordResponse>.Failure(string.Join(" ", validationResult.Errors));
+            }
+
+            // Check if new password is different from current password
+            if (user.VerifyPassword(request.NewPassword))
+            {
+                return Result<ChangePasswordResponse>.Failure("New password must be different from current password.");
+            }
+
+            // Change the password
+            user.ChangePassword(request.NewPassword);
+
+            // Save changes
+            context.Users.Update(user);
+            await context.SaveChangesAsync(cancellationToken);
+
+            var response = new ChangePasswordResponse();
+            return Result<ChangePasswordResponse>.Success(response);
+        }
+        catch (Exception ex)
+        {
+            return Result<ChangePasswordResponse>.Failure($"Failed to change password: {ex.Message}");
+        }
+    }
 }
