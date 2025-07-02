@@ -12,5 +12,6 @@ public record GetListTasksResponse(
     Guid ListId,
     DateTime? DueDate,
     DateTime? UpdatedAt,
-    DateTime? DeletedAt
+    DateTime? DeletedAt,
+    DateTime CreatedAt
 );

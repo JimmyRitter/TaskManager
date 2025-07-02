@@ -22,7 +22,7 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
 
         returnTasks.AddRange(tasks.Select(t =>
             new GetListTasksResponse(t.Id, t.Description, t.Priority, t.IsCompleted, t.ListId, t.DueDate, t.UpdatedAt,
-                t.DeletedAt))
+                t.DeletedAt, t.CreatedAt))
         );
 
         return Result<List<GetListTasksResponse>>.Success(returnTasks);

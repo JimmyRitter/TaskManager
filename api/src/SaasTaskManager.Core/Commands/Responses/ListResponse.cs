@@ -10,7 +10,8 @@ public record GetUsersListsResponse(
     string Description,
     ListCategory Category,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    List<GetListTasksResponse> Tasks);
 
 public record CreateListResponse(
     Guid Id,

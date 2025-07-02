@@ -5,20 +5,43 @@ using SaasTaskManager.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using SaasTaskManager.Core.Commands.Responses;
 using SaasTaskManager.Core.Entities;
+using System.Linq;
 
 public class ListService(ApplicationDbContext dbContext) : IListService
 {
     public async Task<Result<List<GetUsersListsResponse>>> GetUsersListsAsync(Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var lists = await dbContext.Lists.Where((x) => x.OwnerId == userId).ToListAsync(cancellationToken);
+        var lists = await dbContext.Lists
+            .Include(l => l.Tasks.Where(t => t.DeletedAt == null))
+            .Where(x => x.OwnerId == userId)
+            .ToListAsync(cancellationToken);
 
         var returnLists = new List<GetUsersListsResponse>();
 
         returnLists.AddRange(lists.Select(i =>
-            new GetUsersListsResponse(i.Id, i.Name, i.Description, i.Category, i.CreatedAt, i.UpdatedAt))
+            new GetUsersListsResponse(
+                i.Id, 
+                i.Name, 
+                i.Description, 
+                i.Category, 
+                i.CreatedAt, 
+                i.UpdatedAt,
+                i.Tasks
+                    .OrderBy(t => t.CreatedAt)
+                    .Select(t => new GetListTasksResponse(
+                        t.Id,
+                        t.Description,
+                        t.Priority,
+                        t.IsCompleted,
+                        t.ListId,
+                        t.DueDate,
+                        t.UpdatedAt,
+                        t.DeletedAt,
+                        t.CreatedAt
+                    )).ToList()
+            ))
         );
-
 
         return Result<List<GetUsersListsResponse>>.Success(returnLists);
     }
