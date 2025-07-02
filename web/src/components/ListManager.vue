@@ -35,54 +35,99 @@
         <div 
           v-for="list in lists" 
           :key="list.id" 
-          class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+          class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col min-h-[280px]"
         >
-          <!-- List Header -->
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 truncate pr-2">{{ list.name }}</h3>
-            <button 
-              @click="onDeleteList(list)"
-              class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors duration-200"
-              title="Delete list"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </button>
-          </div>
-
-          <!-- List Description -->
-          <p v-if="list.description" class="text-gray-600 text-sm mb-4">{{ list.description }}</p>
-
-          <!-- Tasks -->
-          <div v-if="list.tasks && list.tasks.length > 0" class="mb-4">
-            <div class="space-y-2">
-              <div 
-                v-for="task in list.tasks.slice(0, 3)" 
-                :key="task.id"
-                class="text-sm text-gray-700 flex items-center"
+          <!-- Main Content -->
+          <div class="flex-grow">
+            <!-- List Header -->
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 truncate pr-2">{{ list.name }}</h3>
+              <button 
+                @click="onDeleteList(list)"
+                class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors duration-200"
+                title="Delete list"
               >
-                <div class="w-2 h-2 bg-orange-400 rounded-full mr-2 flex-shrink-0"></div>
-                <span class="truncate">{{ task.description }}</span>
-              </div>
-              <div v-if="list.tasks.length > 3" class="text-xs text-gray-500 ml-4">
-                +{{ list.tasks.length - 3 }} more tasks
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- List Description -->
+            <p v-if="list.description" class="text-gray-600 text-sm mb-4">{{ list.description }}</p>
+
+            <!-- Tasks -->
+            <div v-if="list.tasks && list.tasks.length > 0" class="mb-4">
+              <div class="space-y-2">
+                <div 
+                  v-for="task in [...list.tasks].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())" 
+                  :key="task.id"
+                  class="text-sm text-gray-700 flex items-center cursor-pointer group"
+                  @click="toggleTask(task)"
+                  :title="task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'"
+                >
+                  <div :class="['w-4 h-4 mr-2 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-colors', task.isCompleted ? 'bg-orange-400 border-orange-500' : 'bg-white border-gray-300 group-hover:border-orange-400']">
+                    <svg v-if="task.isCompleted" class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span :class="['truncate transition-colors', task.isCompleted ? 'line-through text-gray-400' : '']">{{ task.description }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Empty Tasks State -->
-          <div v-else class="mb-4">
-            <div class="text-center py-4">
-              <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              <p class="text-sm text-gray-500 mb-3">No tasks yet</p>
+            <!-- Empty Tasks State -->
+            <div v-else class="mb-4">
+              <div class="text-center py-4">
+                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <p class="text-sm text-gray-500 mb-3">No tasks yet</p>
+                <button 
+                  v-if="addingTaskToListId !== list.id"
+                  @click="addTask(list)"
+                  class="text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 px-3 py-1 rounded transition-colors duration-200"
+                >
+                  Add your first task
+                </button>
+              </div>
+            </div>
+            
+            <!-- Inline Task Input -->
+            <div v-if="addingTaskToListId === list.id" class="mb-4">
+              <div class="flex gap-2">
+                <input
+                  :id="`task-input-${list.id}`"
+                  v-model="newTaskDescription"
+                  type="text"
+                  placeholder="Enter task description..."
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                  @keyup.enter="createTaskForList(list)"
+                  @keyup.escape="cancelAddTask"
+                />
+                <button
+                  @click="createTaskForList(list)"
+                  class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 text-sm font-medium"
+                  :disabled="!newTaskDescription.trim()"
+                >
+                  Add
+                </button>
+                <button
+                  @click="cancelAddTask"
+                  class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+            
+            <!-- Add Task Button for lists with tasks -->
+            <div v-if="list.tasks && list.tasks.length > 0 && addingTaskToListId !== list.id" class="mb-4">
               <button 
                 @click="addTask(list)"
-                class="text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 px-3 py-1 rounded transition-colors duration-200"
+                class="w-full text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 py-2 rounded transition-colors duration-200 border border-dashed border-orange-300 hover:border-orange-400"
               >
-                Add your first task
+                + Add another task
               </button>
             </div>
           </div>
@@ -94,7 +139,7 @@
                 {{ list.tasks?.length || 0 }} {{ (list.tasks?.length || 0) === 1 ? 'task' : 'tasks' }}
               </span>
               <button 
-                v-if="list.tasks && list.tasks.length > 0"
+                v-if="list.tasks && list.tasks.length > 0 && addingTaskToListId !== list.id"
                 @click="addTask(list)"
                 class="text-orange-600 hover:text-orange-700 font-medium hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
               >
@@ -163,6 +208,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { createList as createListService, getUserLists, deleteList as deleteListService } from '@/services/list'
+import { createTask, toggleTaskStatus, TaskPriority, type CreateTaskRequest } from '@/services/task'
 import { setAuthToken } from '@/services/api'
 
 const auth = useAuthStore()
@@ -171,12 +217,17 @@ const showCreateList = ref(false)
 const newListName = ref('')
 const newListDescription = ref('')
 
+// Task creation state
+const addingTaskToListId = ref<string | null>(null)
+const newTaskDescription = ref('')
+
 if (auth.token) setAuthToken(auth.token)
 
 async function fetchLists() {
   try {
     const data = await getUserLists()
-    lists.value = data.map((l: any) => ({ ...l, tasks: l.tasks || [] }))
+    // Tasks are now included in the API response
+    lists.value = data
   } catch (e) {
     lists.value = []
   }
@@ -187,16 +238,13 @@ onMounted(fetchLists)
 async function createList() {
   if (!newListName.value.trim()) return
   try {
-    const data = await createListService(newListName.value, newListDescription.value)
-    lists.value.push({
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      tasks: []
-    })
+    await createListService(newListName.value, newListDescription.value)
     showCreateList.value = false
     newListName.value = ''
     newListDescription.value = ''
+    
+    // Refresh the lists to get the complete data structure
+    await fetchLists()
   } catch (e) {
     alert('Failed to create list')
   }
@@ -213,8 +261,51 @@ async function onDeleteList(list: any) {
 }
 
 function addTask(list: any) {
-  // TODO: open add task modal for this list
-  alert('Add task for list: ' + list.name)
+  addingTaskToListId.value = list.id
+  newTaskDescription.value = ''
+  // Focus the input after Vue updates the DOM
+  setTimeout(() => {
+    const input = document.querySelector(`#task-input-${list.id}`) as HTMLInputElement
+    if (input) input.focus()
+  }, 50)
+}
+
+async function createTaskForList(list: any) {
+  if (!newTaskDescription.value.trim()) return
+  
+  try {
+    const taskRequest: CreateTaskRequest = {
+      description: newTaskDescription.value.trim(),
+      priority: TaskPriority.Medium, // Default to medium priority
+      listId: list.id
+    }
+    
+    await createTask(taskRequest)
+    
+    // Reset state
+    addingTaskToListId.value = null
+    newTaskDescription.value = ''
+    
+    // Refresh the lists to get the updated task data from server
+    await fetchLists()
+  } catch (e) {
+    alert('Failed to create task')
+  }
+}
+
+function cancelAddTask() {
+  addingTaskToListId.value = null
+  newTaskDescription.value = ''
+}
+
+async function toggleTask(task: any) {
+  try {
+    await toggleTaskStatus(task.id)
+    // Refresh the lists to get updated task status
+    await fetchLists()
+  } catch (e) {
+    alert('Failed to toggle task status')
+  }
 }
 </script>
 

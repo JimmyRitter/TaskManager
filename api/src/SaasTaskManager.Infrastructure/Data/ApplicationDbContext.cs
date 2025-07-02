@@ -36,6 +36,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             builder.Property(u => u.OwnerId);
             builder.Property(u => u.CreatedAt).IsRequired();
             builder.Property(u => u.UpdatedAt);
+            
+            // Configure relationship with Tasks
+            builder.HasMany(l => l.Tasks)
+                .WithOne()
+                .HasForeignKey(t => t.ListId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
 
