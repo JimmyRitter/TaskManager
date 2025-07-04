@@ -123,6 +123,60 @@ The frontend will be available at `http://localhost:5173` (or check the console 
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
+## Test Coverage
+
+The project includes comprehensive test coverage for the .NET Core API with detailed HTML reports.
+
+### Running Coverage Analysis
+
+Navigate to the API directory and run the appropriate coverage script:
+
+**Linux/macOS:**
+```bash
+cd api
+chmod +x scripts/coverage.sh
+./scripts/coverage.sh
+```
+
+**Windows:**
+```powershell
+cd api
+.\scripts\coverage.ps1
+```
+
+### Viewing Coverage Reports
+
+After running the coverage script, you can view the detailed HTML report:
+
+1. **Open the HTML report:**
+   ```bash
+   # The report is generated at:
+   api/coverage/html/index.html
+   ```
+
+2. **Open in browser:** Double-click the `index.html` file or open it with your preferred web browser.
+
+### Understanding Coverage Data
+
+The coverage report provides:
+- **Line Coverage:** Percentage of code lines executed during tests
+- **Branch Coverage:** Percentage of code branches (if/else, switch cases) tested
+- **Method Coverage:** Percentage of methods called during tests
+
+**Coverage Goals:**
+- Core business logic: 90%+ line coverage
+- Services and entities: 85%+ line coverage
+- Overall project: 80%+ line coverage
+
+### Coverage Files
+
+Coverage data is stored in:
+- `api/coverage/` - Generated coverage reports
+- `api/coverlet.runsettings` - Coverage configuration
+- Raw coverage data in Cobertura XML format
+
+For more detailed information about testing practices, see `api/TEST_COVERAGE.md`.
+
 ## License
 
 This project is licensed under the MIT License. 
