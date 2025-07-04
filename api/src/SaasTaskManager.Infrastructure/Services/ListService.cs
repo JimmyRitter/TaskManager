@@ -13,7 +13,7 @@ public class ListService(ApplicationDbContext dbContext) : IListService
         CancellationToken cancellationToken = default)
     {
         var lists = await dbContext.Lists
-            .Include(l => l.Tasks.Where(t => t.DeletedAt == null))
+            .Include(l => l.Tasks)
             .Where(x => x.OwnerId == userId)
             .ToListAsync(cancellationToken);
 
@@ -28,6 +28,7 @@ public class ListService(ApplicationDbContext dbContext) : IListService
                 i.CreatedAt, 
                 i.UpdatedAt,
                 i.Tasks
+                    .Where(t => t.DeletedAt == null)
                     .OrderBy(t => t.CreatedAt)
                     .Select(t => new GetListTasksResponse(
                         t.Id,
