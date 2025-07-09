@@ -7,7 +7,8 @@ public record GetListTasksRequest(string ListId);
 public record CreateTaskRequest(
     string Description,
     TaskPriority Priority,
-    string ListId
+    string ListId,
+    int? Order = null
 );
 
 public record DeleteTaskRequest(string TaskId);

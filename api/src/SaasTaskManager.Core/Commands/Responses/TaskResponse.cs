@@ -10,6 +10,7 @@ public record GetListTasksResponse(
     TaskPriority Priority,
     bool IsCompleted,
     Guid ListId,
+    int Order,
     DateTime? DueDate,
     DateTime? UpdatedAt,
     DateTime? DeletedAt,

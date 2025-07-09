@@ -62,6 +62,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             builder.Property(t => t.Priority).IsRequired();
             builder.Property(t => t.IsCompleted);
             builder.Property(t => t.ListId).IsRequired();
+            builder.Property(t => t.Order).IsRequired();
             builder.Property(t => t.DueDate);
             builder.Property(t => t.CreatedAt).IsRequired();
             builder.Property(t => t.UpdatedAt);

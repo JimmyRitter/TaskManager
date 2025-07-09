@@ -15,13 +15,15 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
         CancellationToken cancellationToken)
     {
         var tasks = await dbContext.Tasks.Where(t => t.ListId == listId)
-            .OrderByDescending(t => t.DeletedAt)
+            .OrderBy(t => t.DeletedAt.HasValue ? 1 : 0) // Active tasks first (DeletedAt == null)
+            .ThenBy(t => t.Order) // Then by order for active tasks
+            .ThenByDescending(t => t.DeletedAt) // Then by deletion date for deleted tasks
             .ToListAsync(cancellationToken);
 
         var returnTasks = new List<GetListTasksResponse>();
 
         returnTasks.AddRange(tasks.Select(t =>
-            new GetListTasksResponse(t.Id, t.Description, t.Priority, t.IsCompleted, t.ListId, t.DueDate, t.UpdatedAt,
+            new GetListTasksResponse(t.Id, t.Description, t.Priority, t.IsCompleted, t.ListId, t.Order, t.DueDate, t.UpdatedAt,
                 t.DeletedAt, t.CreatedAt))
         );
 
@@ -42,7 +44,18 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
                 return Result.Failure("The given list doesn't exist or doesn't belong to the authenticated user.");
             }
 
-            var task = Task.Create(command.Description, command.Priority, listIdGuid);
+            // Use provided order or calculate the next order value for the new task
+            var taskOrder = command.Order;
+            if (!taskOrder.HasValue)
+            {
+                var maxOrder = await dbContext.Tasks
+                    .Where(t => t.ListId == listIdGuid && t.DeletedAt == null)
+                    .MaxAsync(t => (int?)t.Order, cancellationToken) ?? -1;
+                
+                taskOrder = maxOrder + 1;
+            }
+
+            var task = Task.Create(command.Description, command.Priority, listIdGuid, taskOrder.Value);
             await dbContext.Tasks.AddAsync(task, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
 

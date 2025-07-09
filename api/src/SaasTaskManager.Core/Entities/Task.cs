@@ -9,6 +9,7 @@ public class Task
     public TaskPriority Priority { get; private set; }
     public bool IsCompleted { get; private set; }
     public Guid ListId { get; private set; }
+    public int Order { get; private set; }
     public DateTime? DueDate { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
@@ -20,7 +21,7 @@ public class Task
 
     private Task() { }
 
-    public static Task Create(string description, TaskPriority priority, Guid listId)
+    public static Task Create(string description, TaskPriority priority, Guid listId, int order = 0)
     {
         return new Task
         {
@@ -28,6 +29,7 @@ public class Task
             Description = description,
             Priority = priority,
             ListId = listId,
+            Order = order,
             IsCompleted = false,
             CreatedAt = DateTime.UtcNow,
         };
@@ -52,6 +54,12 @@ public class Task
     {
         if (!DeletedAt.HasValue) return;
         DeletedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateOrder(int newOrder)
+    {
+        Order = newOrder;
         UpdatedAt = DateTime.UtcNow;
     }
 

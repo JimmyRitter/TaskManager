@@ -29,13 +29,14 @@ public class ListService(ApplicationDbContext dbContext) : IListService
                 i.UpdatedAt,
                 i.Tasks
                     .Where(t => t.DeletedAt == null)
-                    .OrderBy(t => t.CreatedAt)
+                    .OrderBy(t => t.Order)
                     .Select(t => new GetListTasksResponse(
                         t.Id,
                         t.Description,
                         t.Priority,
                         t.IsCompleted,
                         t.ListId,
+                        t.Order,
                         t.DueDate,
                         t.UpdatedAt,
                         t.DeletedAt,
