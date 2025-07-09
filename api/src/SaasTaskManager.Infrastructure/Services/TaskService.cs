@@ -118,4 +118,69 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
             return Result.Failure($"Failed to toggle task status: {ex.Message}");
         }
     }
+
+    public async Task<Result> UpdateTaskOrderAsync(UpdateTaskOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var taskId = Guid.Parse(request.TaskId);
+            var newOrder = request.NewOrder;
+            
+            // Get the task being moved
+            var task = await dbContext.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
+
+            if (task == null)
+            {
+                return Result.Failure("Task not found");
+            }
+
+            // Get all active tasks in the same list ordered by current order
+            var allTasksInList = await dbContext.Tasks
+                .Where(t => t.ListId == task.ListId && t.DeletedAt == null)
+                .OrderBy(t => t.Order)
+                .ToListAsync(cancellationToken);
+
+            var currentOrder = task.Order;
+            
+            // Validate new order is within bounds
+            if (newOrder < 0 || newOrder >= allTasksInList.Count)
+            {
+                return Result.Failure("Invalid order position");
+            }
+
+            // If moving to the same position, no changes needed
+            if (currentOrder == newOrder)
+            {
+                return Result.Success();
+            }
+
+            // Remove the task from the list temporarily for reordering logic
+            var taskToMove = allTasksInList.First(t => t.Id == taskId);
+            allTasksInList.Remove(taskToMove);
+            
+            // Insert the task at the new position
+            allTasksInList.Insert(newOrder, taskToMove);
+            
+            // Update order values for all tasks to maintain sequential ordering (0, 1, 2, ...)
+            for (int i = 0; i < allTasksInList.Count; i++)
+            {
+                if (allTasksInList[i].Order != i)
+                {
+                    allTasksInList[i].UpdateOrder(i);
+                    dbContext.Tasks.Update(allTasksInList[i]);
+                }
+            }
+
+            // Save all changes in a single transaction
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to update task order: {ex.Message}");
+        }
+    }
 }

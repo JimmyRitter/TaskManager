@@ -61,4 +61,15 @@ public class TasksController(ITaskService taskService) : ControllerBase
 
         return Ok(ApiResponse.Success("Task toggled successfully"));
     }
+
+    [Authorize]
+    [HttpPut("update-order")]
+    public async Task<ActionResult<ApiResponse>> UpdateTaskOrder([FromBody] UpdateTaskOrderRequest command, CancellationToken cancellationToken = default)
+    {
+        var result = await taskService.UpdateTaskOrderAsync(command, cancellationToken);
+        if (!result.IsSuccess)
+            return BadRequest(ApiResponse.Failure(result.Error));
+
+        return Ok(ApiResponse.Success("Task order updated successfully"));
+    }
 }

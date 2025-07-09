@@ -15,6 +15,4 @@ public record DeleteTaskRequest(string TaskId);
 
 public record ToggleStatusRequest(string TaskId);
 
-// public record DeleteTaskRequest(string Id, CancellationToken CancellationToken);
-//
-// public record ToggleTaskStatusRequest(string Id, CancellationToken CancellationToken);
+public record UpdateTaskOrderRequest(string TaskId, int NewOrder);

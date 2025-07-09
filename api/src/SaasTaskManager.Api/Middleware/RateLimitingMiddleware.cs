@@ -10,8 +10,8 @@ public class RateLimitingMiddleware
     
     // Store request counts per IP
     private static readonly ConcurrentDictionary<string, RateLimitInfo> _requests = new();
-    private const int MaxRequests = 100; // 100 requests per 15 minutes for all endpoints
-    private const int TimeWindowMinutes = 15;
+    private const int MaxRequests = 50;
+    private const int TimeWindowMinutes = 1;
     
     public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
     {

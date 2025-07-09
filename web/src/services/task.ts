@@ -30,4 +30,9 @@ export async function toggleTaskStatus(taskId: string) {
 export async function getListTasks(listId: string) {
   const { data } = await api.get('/tasks/get-list-tasks', { data: { listId } })
   return data.data
+}
+
+export async function updateTaskOrder(taskId: string, newOrder: number) {
+  const { data } = await api.put('/tasks/update-order', { taskId, newOrder })
+  return data
 } 

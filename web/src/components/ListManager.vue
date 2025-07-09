@@ -56,95 +56,21 @@
             <!-- List Description -->
             <p v-if="list.description" class="text-gray-600 text-sm mb-4">{{ list.description }}</p>
 
-            <!-- Tasks -->
-            <div v-if="list.tasks && list.tasks.length > 0" class="mb-4">
-              <div class="space-y-2">
-                <div 
-                  v-for="task in [...list.tasks].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())" 
-                  :key="task.id"
-                  class="text-sm text-gray-700 flex items-center cursor-pointer group"
-                  @click="toggleTask(task)"
-                  :title="task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'"
-                >
-                  <div :class="['w-4 h-4 mr-2 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-colors', task.isCompleted ? 'bg-orange-400 border-orange-500' : 'bg-white border-gray-300 group-hover:border-orange-400']">
-                    <svg v-if="task.isCompleted" class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span :class="['truncate transition-colors', task.isCompleted ? 'line-through text-gray-400' : '']">{{ task.description }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Empty Tasks State -->
-            <div v-else class="mb-4">
-              <div class="text-center py-4">
-                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                <p class="text-sm text-gray-500 mb-3">No tasks yet</p>
-                <button 
-                  v-if="addingTaskToListId !== list.id"
-                  @click="addTask(list)"
-                  class="text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 px-3 py-1 rounded transition-colors duration-200"
-                >
-                  Add your first task
-                </button>
-              </div>
-            </div>
-            
-            <!-- Inline Task Input -->
-            <div v-if="addingTaskToListId === list.id" class="mb-4">
-              <div class="flex gap-2">
-                <input
-                  :id="`task-input-${list.id}`"
-                  v-model="newTaskDescription"
-                  type="text"
-                  placeholder="Enter task description..."
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                  @keyup.enter="createTaskForList(list)"
-                  @keyup.escape="cancelAddTask"
-                />
-                <button
-                  @click="createTaskForList(list)"
-                  class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 text-sm font-medium"
-                  :disabled="!newTaskDescription.trim()"
-                >
-                  Add
-                </button>
-                <button
-                  @click="cancelAddTask"
-                  class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-            
-            <!-- Add Task Button for lists with tasks -->
-            <div v-if="list.tasks && list.tasks.length > 0 && addingTaskToListId !== list.id" class="mb-4">
-              <button 
-                @click="addTask(list)"
-                class="w-full text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 py-2 rounded transition-colors duration-200 border border-dashed border-orange-300 hover:border-orange-400"
-              >
-                + Add another task
-              </button>
-            </div>
+            <!-- Task List Component -->
+            <TaskList 
+              :tasks="list.tasks || []" 
+              :list-id="list.id"
+              @task-updated="fetchLists"
+              @task-reordered="updateTaskOrder"
+            />
           </div>
 
           <!-- Task Count -->
           <div class="border-t border-gray-100 pt-3">
-            <div class="flex justify-between items-center text-sm">
+            <div class="flex justify-center items-center text-sm">
               <span class="text-gray-500">
                 {{ list.tasks?.length || 0 }} {{ (list.tasks?.length || 0) === 1 ? 'task' : 'tasks' }}
               </span>
-              <button 
-                v-if="list.tasks && list.tasks.length > 0 && addingTaskToListId !== list.id"
-                @click="addTask(list)"
-                class="text-orange-600 hover:text-orange-700 font-medium hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
-              >
-                + Add task
-              </button>
             </div>
           </div>
         </div>
@@ -208,18 +134,15 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { createList as createListService, getUserLists, deleteList as deleteListService } from '@/services/list'
-import { createTask, toggleTaskStatus, TaskPriority, type CreateTaskRequest } from '@/services/task'
+import { updateTaskOrder as updateTaskOrderService } from '@/services/task'
 import { setAuthToken } from '@/services/api'
+import TaskList from './TaskList.vue'
 
 const auth = useAuthStore()
 const lists = ref<any[]>([])
 const showCreateList = ref(false)
 const newListName = ref('')
 const newListDescription = ref('')
-
-// Task creation state
-const addingTaskToListId = ref<string | null>(null)
-const newTaskDescription = ref('')
 
 if (auth.token) setAuthToken(auth.token)
 
@@ -260,51 +183,50 @@ async function onDeleteList(list: any) {
   }
 }
 
-function addTask(list: any) {
-  addingTaskToListId.value = list.id
-  newTaskDescription.value = ''
-  // Focus the input after Vue updates the DOM
-  setTimeout(() => {
-    const input = document.querySelector(`#task-input-${list.id}`) as HTMLInputElement
-    if (input) input.focus()
-  }, 50)
-}
-
-async function createTaskForList(list: any) {
-  if (!newTaskDescription.value.trim()) return
+// Handle task reordering from TaskList component
+async function updateTaskOrder(movedTask: { taskId: string, newOrder: number }) {
+  // Find the list containing the task
+  const listWithTask = lists.value.find(list => 
+    list.tasks?.some((task: any) => task.id === movedTask.taskId)
+  )
   
-  try {
-    const taskRequest: CreateTaskRequest = {
-      description: newTaskDescription.value.trim(),
-      priority: TaskPriority.Medium, // Default to medium priority
-      listId: list.id
-    }
-    
-    await createTask(taskRequest)
-    
-    // Reset state
-    addingTaskToListId.value = null
-    newTaskDescription.value = ''
-    
-    // Refresh the lists to get the updated task data from server
-    await fetchLists()
-  } catch (e) {
-    alert('Failed to create task')
+  if (!listWithTask) {
+    console.error('Could not find list containing task')
+    return
   }
-}
 
-function cancelAddTask() {
-  addingTaskToListId.value = null
-  newTaskDescription.value = ''
-}
+  // Store original state for rollback if needed
+  const originalTasks = [...listWithTask.tasks]
+  
+  // Optimistically update the UI immediately
+  const taskIndex = listWithTask.tasks.findIndex((task: any) => task.id === movedTask.taskId)
+  if (taskIndex === -1) {
+    console.error('Could not find task in list')
+    return
+  }
 
-async function toggleTask(task: any) {
+  // Remove task from its current position
+  const [movedTaskData] = listWithTask.tasks.splice(taskIndex, 1)
+  
+  // Insert task at new position
+  listWithTask.tasks.splice(movedTask.newOrder, 0, movedTaskData)
+  
+  // Update all task orders to be sequential (0, 1, 2, ...)
+  listWithTask.tasks.forEach((task: any, index: number) => {
+    task.order = index
+  })
+
   try {
-    await toggleTaskStatus(task.id)
-    // Refresh the lists to get updated task status
-    await fetchLists()
+    // Call API in background
+    await updateTaskOrderService(movedTask.taskId, movedTask.newOrder)
+    // Success! No need to fetch again since we already updated the UI optimistically
   } catch (e) {
-    alert('Failed to toggle task status')
+    console.error('Failed to update task order:', e)
+    
+    // Revert optimistic update by restoring original state
+    listWithTask.tasks = originalTasks
+    
+    alert('Failed to update task order. Changes have been reverted.')
   }
 }
 </script>
