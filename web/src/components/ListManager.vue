@@ -62,6 +62,8 @@
               :list-id="list.id"
               @task-updated="fetchLists"
               @task-reordered="updateTaskOrder"
+              @task-deleted="handleTaskDeleted"
+              @task-delete-failed="handleTaskDeleteFailed"
             />
           </div>
 
@@ -228,6 +230,70 @@ async function updateTaskOrder(movedTask: { taskId: string, newOrder: number }) 
     
     alert('Failed to update task order. Changes have been reverted.')
   }
+}
+
+// Store deleted tasks temporarily for potential restoration
+const deletedTasks = ref<Map<string, { task: any, listId: string }>>(new Map())
+
+// Handle optimistic task deletion
+function handleTaskDeleted(taskId: string) {
+  // Find the list containing the task
+  const listWithTask = lists.value.find(list => 
+    list.tasks?.some((task: any) => task.id === taskId)
+  )
+  
+  if (!listWithTask) {
+    console.error('Could not find list containing task to delete')
+    return
+  }
+
+  // Find and store the task before removing it
+  const taskIndex = listWithTask.tasks.findIndex((task: any) => task.id === taskId)
+  if (taskIndex === -1) {
+    console.error('Could not find task in list')
+    return
+  }
+
+  // Store the task for potential restoration
+  const taskToDelete = listWithTask.tasks[taskIndex]
+  deletedTasks.value.set(taskId, { task: taskToDelete, listId: listWithTask.id })
+  
+  // Remove task from UI immediately (optimistic)
+  listWithTask.tasks.splice(taskIndex, 1)
+}
+
+// Handle failed task deletion - restore the task
+function handleTaskDeleteFailed(taskId: string) {
+  const deletedTaskData = deletedTasks.value.get(taskId)
+  
+  if (!deletedTaskData) {
+    console.error('Could not find deleted task data to restore')
+    // Fallback: refresh all data from server
+    fetchLists()
+    return
+  }
+
+  // Find the list to restore the task to
+  const listToRestore = lists.value.find(list => list.id === deletedTaskData.listId)
+  
+  if (!listToRestore) {
+    console.error('Could not find list to restore task to')
+    // Fallback: refresh all data from server
+    fetchLists()
+    return
+  }
+
+  // Restore the task to the list
+  if (!listToRestore.tasks) {
+    listToRestore.tasks = []
+  }
+  listToRestore.tasks.push(deletedTaskData.task)
+  
+  // Sort tasks by order to maintain proper sequence
+  listToRestore.tasks.sort((a: any, b: any) => a.order - b.order)
+  
+  // Clean up stored deleted task
+  deletedTasks.value.delete(taskId)
 }
 </script>
 

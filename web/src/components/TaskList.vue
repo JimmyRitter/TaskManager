@@ -73,16 +73,28 @@
             >
               {{ task.description }}
             </span>
-            <button
-              @click.stop="startEdit(task)"
-              class="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-opacity"
-              title="Edit task"
-              style="padding-top: 2px;"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
+            <div class="flex items-center gap-1">
+              <button
+                @click.stop="startEdit(task)"
+                class="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-opacity"
+                title="Edit task"
+                style="padding-top: 2px;"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button
+                @click.stop="deleteTaskHandler(task)"
+                class="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all duration-200"
+                title="Delete task"
+                style="padding-top: 2px;"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H7a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </VueDraggable>
@@ -151,7 +163,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { createTask as createTaskService, updateTask, toggleTaskStatus, TaskPriority, type CreateTaskRequest, type UpdateTaskRequest } from '@/services/task'
+import { createTask as createTaskService, updateTask, deleteTask, toggleTaskStatus, TaskPriority, type CreateTaskRequest, type UpdateTaskRequest } from '@/services/task'
 
 interface Task {
   id: string
@@ -169,6 +181,8 @@ interface Props {
 interface Emits {
   (e: 'task-updated'): void
   (e: 'task-reordered', movedTask: { taskId: string, newOrder: number }): void
+  (e: 'task-deleted', taskId: string): void
+  (e: 'task-delete-failed', taskId: string): void
 }
 
 const props = defineProps<Props>()
@@ -245,6 +259,23 @@ async function toggleTask(task: Task) {
     emit('task-updated')
   } catch (e) {
     alert('Failed to toggle task status')
+  }
+}
+
+async function deleteTaskHandler(task: Task) {
+  if (confirm(`Are you sure you want to delete "${task.description}"?`)) {
+    // Optimistic UI: immediately remove from UI
+    emit('task-deleted', task.id)
+    
+    try {
+      // Make the actual API call
+      await deleteTask(task.id)
+      // Success! The UI is already updated, so no further action needed
+    } catch (e) {
+      // Revert the optimistic update on failure
+      emit('task-delete-failed', task.id)
+      alert('Failed to delete task. It has been restored.')
+    }
   }
 }
 
