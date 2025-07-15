@@ -43,19 +43,29 @@ public class TasksController(ITaskService taskService) : ControllerBase
     [HttpDelete("delete")]
     public async Task<ActionResult<ApiResponse>> DeleteTask([FromBody] DeleteTaskRequest command, CancellationToken cancellationToken = default)
     {
-        var result = await taskService.DeleteTaskAsync(command.TaskId, cancellationToken);
+        var result = await taskService.DeleteTaskAsync(command.TaskId.ToString(), cancellationToken);
         if (!result.IsSuccess)
             return BadRequest(ApiResponse.Failure(result.Error));
 
         return Ok(ApiResponse.Success("Task deleted successfully"));
     }
 
+    [Authorize]
+    [HttpPut("update")]
+    public async Task<ActionResult<ApiResponse<GetListTasksResponse>>> UpdateTask([FromBody] UpdateTaskRequest command, CancellationToken cancellationToken = default)
+    {
+        var result = await taskService.UpdateTaskAsync(command);
+        if (!result.IsSuccess)
+            return BadRequest(ApiResponse<GetListTasksResponse>.Failure(result.Error));
+
+        return Ok(ApiResponse<GetListTasksResponse>.Success(result.Value));
+    }
     
     [Authorize]
     [HttpPut("toggle")]
-    public async Task<ActionResult<ApiResponse>> ToggleTaskStatus([FromBody] ToggleStatusRequest command, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ApiResponse>> ToggleTaskStatus([FromBody] ToggleTaskStatusRequest command, CancellationToken cancellationToken = default)
     {
-        var result = await taskService.ToggleTaskStatusAsync(command.TaskId, cancellationToken);
+        var result = await taskService.ToggleTaskStatusAsync(command.TaskId.ToString(), cancellationToken);
         if (!result.IsSuccess)
             return BadRequest(ApiResponse.Failure(result.Error));
 

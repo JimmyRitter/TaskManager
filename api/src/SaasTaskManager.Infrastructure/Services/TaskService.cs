@@ -183,4 +183,44 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
             return Result.Failure($"Failed to update task order: {ex.Message}");
         }
     }
+
+    public async Task<Result<GetListTasksResponse>> UpdateTaskAsync(UpdateTaskRequest request)
+    {
+        try
+        {
+            var task = await dbContext.Tasks
+                .FirstOrDefaultAsync(t => t.Id == request.TaskId);
+
+            if (task == null)
+            {
+                return Result<GetListTasksResponse>.Failure("Task not found");
+            }
+
+            // Update the task using the entity method
+            task.UpdateTask(request.Description, request.Priority, request.DueDate);
+
+            dbContext.Tasks.Update(task);
+            await dbContext.SaveChangesAsync();
+
+            // Return the updated task response
+            var response = new GetListTasksResponse(
+                task.Id, 
+                task.Description, 
+                task.Priority, 
+                task.IsCompleted, 
+                task.ListId, 
+                task.Order, 
+                task.DueDate, 
+                task.UpdatedAt,
+                task.DeletedAt, 
+                task.CreatedAt
+            );
+
+            return Result<GetListTasksResponse>.Success(response);
+        }
+        catch (Exception ex)
+        {
+            return Result<GetListTasksResponse>.Failure($"Failed to update task: {ex.Message}");
+        }
+    }
 }

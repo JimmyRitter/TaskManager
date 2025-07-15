@@ -12,4 +12,5 @@ public interface ITaskService
     Task<Result> DeleteTaskAsync(string taskId, CancellationToken cancellationToken);
     Task<Result> ToggleTaskStatusAsync(string taskId, CancellationToken cancellationToken);
     Task<Result> UpdateTaskOrderAsync(UpdateTaskOrderRequest request, CancellationToken cancellationToken);
+    Task<Result<GetListTasksResponse>> UpdateTaskAsync(UpdateTaskRequest request);
 }
