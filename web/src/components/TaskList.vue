@@ -13,10 +13,10 @@
         <div 
           v-for="task in sortedTasks" 
           :key="task.id"
-          class="task-item text-sm text-gray-700 flex items-center cursor-pointer group bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          class="task-item text-sm text-gray-700 flex items-start cursor-pointer group bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <!-- Drag Handle -->
-          <div class="drag-handle mr-2 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing">
+          <div class="drag-handle mr-2 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" style="padding-top: 2px;">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
             </svg>
@@ -27,16 +27,63 @@
             @click="toggleTask(task)"
             :class="['w-4 h-4 mr-2 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-colors', task.isCompleted ? 'bg-orange-400 border-orange-500' : 'bg-white border-gray-300 group-hover:border-orange-400']"
             :title="task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'"
+            style="margin-top: 2px;"
           >
             <svg v-if="task.isCompleted" class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           
-          <!-- Task Content -->
-          <span :class="['truncate transition-colors flex-1', task.isCompleted ? 'line-through text-gray-400' : '']">
-            {{ task.description }}
-          </span>
+          <!-- Task Content - Edit Mode -->
+          <div v-if="editingTaskId === task.id" class="flex-1">
+            <div class="space-y-2">
+              <textarea
+                ref="editInput"
+                v-model="editingDescription"
+                class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm resize-none"
+                style="min-height: 2rem; max-height: none; word-wrap: break-word; white-space: pre-wrap; overflow: hidden; box-sizing: border-box; line-height: 1.25;"
+                @keydown="handleEditKeydown"
+                @input="autoResizeTextarea"
+                @click.stop
+              ></textarea>
+              <div class="flex gap-2 justify-end">
+                <button
+                  @click.stop="saveEdit(task)"
+                  class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition-colors text-xs font-medium"
+                  :disabled="!editingDescription.trim()"
+                >
+                  Save
+                </button>
+                <button
+                  @click.stop="cancelEdit"
+                  class="bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200 transition-colors text-xs font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Task Content - View Mode -->
+          <div v-else class="flex-1 flex items-start justify-between">
+            <span 
+              :class="['transition-colors flex-1 break-words pr-2', task.isCompleted ? 'line-through text-gray-400' : '']"
+              @dblclick="startEdit(task)"
+              style="line-height: 1.25;"
+            >
+              {{ task.description }}
+            </span>
+            <button
+              @click.stop="startEdit(task)"
+              class="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-opacity"
+              title="Edit task"
+              style="padding-top: 2px;"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </VueDraggable>
     </div>
@@ -60,29 +107,32 @@
     
     <!-- Inline Task Input -->
     <div v-if="showTaskInput" class="mb-4">
-      <div class="flex gap-2">
-        <input
+      <div class="space-y-2">
+        <textarea
           ref="taskInput"
           v-model="newTaskDescription"
-          type="text"
           placeholder="Enter task description..."
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-          @keyup.enter="createTask"
-          @keyup.escape="cancelAddTask"
-        />
-        <button
-          @click="createTask"
-          class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 text-sm font-medium"
-          :disabled="!newTaskDescription.trim()"
-        >
-          Add
-        </button>
-        <button
-          @click="cancelAddTask"
-          class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
-        >
-          Cancel
-        </button>
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm resize-none overflow-hidden"
+          rows="1"
+          style="min-height: 2.5rem; word-wrap: break-word; white-space: pre-wrap; line-height: 1.25;"
+          @keydown="handleAddTaskKeydown"
+          @input="autoResizeAddTaskTextarea"
+        ></textarea>
+        <div class="flex gap-2 justify-end">
+          <button
+            @click="createTask"
+            class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 text-sm font-medium"
+            :disabled="!newTaskDescription.trim()"
+          >
+            Add
+          </button>
+          <button
+            @click="cancelAddTask"
+            class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
     
@@ -101,7 +151,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { createTask as createTaskService, toggleTaskStatus, TaskPriority, type CreateTaskRequest } from '@/services/task'
+import { createTask as createTaskService, updateTask, toggleTaskStatus, TaskPriority, type CreateTaskRequest, type UpdateTaskRequest } from '@/services/task'
 
 interface Task {
   id: string
@@ -126,7 +176,7 @@ const emit = defineEmits<Emits>()
 
 const showTaskInput = ref(false)
 const newTaskDescription = ref('')
-const taskInput = ref<HTMLInputElement>()
+const taskInput = ref<HTMLTextAreaElement>()
 
 // Store the original order before drag starts
 const originalTaskOrder = ref<Task[]>([])
@@ -153,7 +203,11 @@ function startAddTask() {
   showTaskInput.value = true
   newTaskDescription.value = ''
   nextTick(() => {
-    taskInput.value?.focus()
+    if (taskInput.value) {
+      taskInput.value.focus()
+      // Auto-resize to fit content
+      resizeTextarea(taskInput.value)
+    }
   })
 }
 
@@ -191,6 +245,138 @@ async function toggleTask(task: Task) {
     emit('task-updated')
   } catch (e) {
     alert('Failed to toggle task status')
+  }
+}
+
+const editingTaskId = ref<string | null>(null)
+const editingDescription = ref('')
+const editInput = ref<HTMLTextAreaElement>()
+
+function startEdit(task: Task) {
+  editingTaskId.value = task.id
+  editingDescription.value = task.description
+  
+  // Use multiple nextTick calls to ensure DOM is fully updated
+  nextTick(() => {
+    nextTick(() => {
+      if (editInput.value) {
+        // Force the value to be set
+        editInput.value.value = task.description
+        
+        // Remove any height constraints first
+        editInput.value.style.height = 'auto'
+        editInput.value.style.maxHeight = 'none'
+        
+        // Focus and resize
+        editInput.value.focus()
+        
+        // Aggressive resize attempts
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            if (editInput.value) {
+              resizeTextarea(editInput.value)
+            }
+          }, i * 25)
+        }
+        
+        // Final resize after longer delay
+        setTimeout(() => {
+          if (editInput.value) {
+            resizeTextarea(editInput.value)
+          }
+        }, 200)
+      }
+    })
+  })
+}
+
+async function saveEdit(task: Task) {
+  if (!editingDescription.value.trim()) return
+  
+  try {
+    const updateRequest: UpdateTaskRequest = {
+      taskId: task.id,
+      description: editingDescription.value.trim()
+    }
+    
+    await updateTask(updateRequest)
+    
+    // Reset state
+    editingTaskId.value = null
+    editingDescription.value = ''
+    
+    // Notify parent to refresh data
+    emit('task-updated')
+  } catch (e) {
+    alert('Failed to update task')
+  }
+}
+
+function cancelEdit() {
+  editingTaskId.value = null
+  editingDescription.value = ''
+}
+
+function handleEditKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    const currentTask = sortedTasks.value.find(t => t.id === editingTaskId.value)
+    if (currentTask) {
+      saveEdit(currentTask)
+    }
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    cancelEdit()
+  }
+}
+
+function resizeTextarea(textarea: HTMLTextAreaElement) {
+  // Store current value and scroll position
+  const value = textarea.value
+  const scrollTop = textarea.scrollTop
+  
+  // Reset all height constraints
+  textarea.style.height = 'auto'
+  textarea.style.maxHeight = 'none'
+  textarea.style.minHeight = '2rem'
+  
+  // Force reflow by setting to 0 first
+  textarea.style.height = '0px'
+  
+  // Get the actual content height including all lines
+  const scrollHeight = textarea.scrollHeight
+  
+  // Set height to accommodate all content with some padding
+  const newHeight = Math.max(scrollHeight + 4, 32) // Add 4px buffer
+  textarea.style.height = newHeight + 'px'
+  
+  // Restore scroll position if it was scrolled
+  if (scrollTop > 0) {
+    textarea.scrollTop = scrollTop
+  }
+}
+
+function autoResizeTextarea(event: Event) {
+  const textarea = event.target as HTMLTextAreaElement
+  if (textarea) {
+    resizeTextarea(textarea)
+  }
+}
+
+function handleAddTaskKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    createTask()
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    cancelAddTask()
+  }
+}
+
+function autoResizeAddTaskTextarea(event: Event) {
+  const textarea = event.target as HTMLTextAreaElement
+  if (textarea) {
+    resizeTextarea(textarea)
   }
 }
 </script>

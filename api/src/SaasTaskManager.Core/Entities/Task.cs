@@ -63,6 +63,20 @@ public class Task
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void UpdateTask(string? description = null, TaskPriority? priority = null, DateTime? dueDate = null)
+    {
+        if (!string.IsNullOrWhiteSpace(description))
+            Description = description;
+            
+        if (priority.HasValue)
+            Priority = priority.Value;
+            
+        if (dueDate.HasValue)
+            DueDate = dueDate.Value;
+            
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public bool IsPastDueDate => DueDate.HasValue && DueDate.Value < DateTime.UtcNow;
     
 }

@@ -11,8 +11,10 @@ public record CreateTaskRequest(
     int? Order = null
 );
 
-public record DeleteTaskRequest(string TaskId);
+public record UpdateTaskRequest(Guid TaskId, string? Description = null, TaskPriority? Priority = null, DateTime? DueDate = null);
 
-public record ToggleStatusRequest(string TaskId);
+public record DeleteTaskRequest(Guid TaskId);
+
+public record ToggleTaskStatusRequest(Guid TaskId);
 
 public record UpdateTaskOrderRequest(string TaskId, int NewOrder);

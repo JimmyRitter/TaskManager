@@ -6,6 +6,13 @@ export interface CreateTaskRequest {
   listId: string
 }
 
+export interface UpdateTaskRequest {
+  taskId: string
+  description?: string
+  priority?: TaskPriority
+  dueDate?: string
+}
+
 export enum TaskPriority {
   Low = 0,
   Medium = 1,
@@ -14,6 +21,11 @@ export enum TaskPriority {
 
 export async function createTask(request: CreateTaskRequest) {
   const { data } = await api.post('/tasks/create', request)
+  return data
+}
+
+export async function updateTask(request: UpdateTaskRequest) {
+  const { data } = await api.put('/tasks/update', request)
   return data
 }
 
