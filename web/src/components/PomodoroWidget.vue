@@ -22,11 +22,11 @@
               <div
                 :class="[
                   'w-3 h-3 rounded-full',
-                  pomodoroStore.isBreak ? 'bg-blue-500' : 'bg-orange-500'
+                  pomodoroStore.isLongBreak ? 'bg-purple-500' : pomodoroStore.isBreak ? 'bg-blue-500' : 'bg-orange-500'
                 ]"
               ></div>
               <span class="font-semibold text-gray-900">
-                {{ pomodoroStore.isBreak ? 'Break Time' : 'Focus Time' }}
+                {{ pomodoroStore.isLongBreak ? 'Long Break' : pomodoroStore.isBreak ? 'Break Time' : 'Focus Time' }}
               </span>
             </div>
             <button
@@ -59,7 +59,7 @@
             <div
               :class="[
                 'h-2 rounded-full transition-all duration-1000 ease-out',
-                pomodoroStore.isBreak ? 'bg-blue-500' : 'bg-orange-500'
+                pomodoroStore.isLongBreak ? 'bg-purple-500' : pomodoroStore.isBreak ? 'bg-blue-500' : 'bg-orange-500'
               ]"
               :style="{ width: `${pomodoroStore.progress * 100}%` }"
             ></div>
@@ -89,6 +89,7 @@ const authStore = useAuthStore()
 
 const WORK_DURATION = computed(() => pomodoroStore.FOCUS_DURATION_MINUTES * 60)
 const BREAK_DURATION = computed(() => pomodoroStore.BREAK_DURATION_MINUTES * 60)
+const LONG_BREAK_DURATION = computed(() => pomodoroStore.LONG_BREAK_DURATION_MINUTES * 60)
 
 // Widget should only show if:
 // 1. User is authenticated
@@ -96,8 +97,16 @@ const BREAK_DURATION = computed(() => pomodoroStore.BREAK_DURATION_MINUTES * 60)
 // 3. User is NOT currently on the Pomodoro page
 const shouldShowWidget = computed(() => {
   const isAuthenticated = !!authStore.user
-  const timerHasBeenStarted = pomodoroStore.isRunning || 
-    pomodoroStore.timeLeft < (pomodoroStore.isBreak ? BREAK_DURATION.value : WORK_DURATION.value)
+  let fullDuration
+  if (pomodoroStore.isLongBreak) {
+    fullDuration = LONG_BREAK_DURATION.value
+  } else if (pomodoroStore.isBreak) {
+    fullDuration = BREAK_DURATION.value
+  } else {
+    fullDuration = WORK_DURATION.value
+  }
+  
+  const timerHasBeenStarted = pomodoroStore.isRunning || pomodoroStore.timeLeft < fullDuration
   const isNotOnPomodoroPage = route.name !== 'pomodoro'
   
   return isAuthenticated && timerHasBeenStarted && isNotOnPomodoroPage

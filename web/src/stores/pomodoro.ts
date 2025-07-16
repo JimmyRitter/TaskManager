@@ -5,15 +5,18 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   // Configurable durations (in minutes for focus, seconds for work/break)
   const FOCUS_DURATION_MINUTES = ref(25) // Default 25 minutes (production)
   const BREAK_DURATION_MINUTES = ref(5) // Default 5 minutes (production)
+  const LONG_BREAK_DURATION_MINUTES = ref(30) // Default 30 minutes (production)
   
   // Computed durations in seconds
   const WORK_DURATION = computed(() => FOCUS_DURATION_MINUTES.value * 60)
   const BREAK_DURATION = computed(() => BREAK_DURATION_MINUTES.value * 60)
+  const LONG_BREAK_DURATION = computed(() => LONG_BREAK_DURATION_MINUTES.value * 60)
 
   // Timer state
   const timeLeft = ref(WORK_DURATION.value)
   const totalDuration = ref(WORK_DURATION.value)
   const isBreak = ref(false)
+  const isLongBreak = ref(false)
   const isRunning = ref(false)
   const focusSessions = ref(0)
   let interval: number | undefined
@@ -27,6 +30,9 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   const focusMinutesTotal = computed(() => focusSessions.value * FOCUS_DURATION_MINUTES.value)
   const focusHours = computed(() => Math.floor(focusMinutesTotal.value / 60))
   const focusMinutes = computed(() => focusMinutesTotal.value % 60)
+  
+  // Check if it's time for a long break (every 4 sessions)
+  const isTimeForLongBreak = computed(() => focusSessions.value > 0 && focusSessions.value % 4 === 0)
 
   // Notification state
   const showNotification = ref(false)
@@ -47,7 +53,14 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     if (typeof document === 'undefined') return
     
     if (isRunning.value) {
-      const label = isBreak.value ? 'Break' : 'Focus'
+      let label
+      if (isLongBreak.value) {
+        label = 'Long Break'
+      } else if (isBreak.value) {
+        label = 'Break'
+      } else {
+        label = 'Focus'
+      }
       const timeString = `${String(minutes.value).padStart(2, '0')}:${String(seconds.value).padStart(2, '0')}`
       document.title = `${timeString} - ${label} | TaskManager`
     } else {
@@ -173,7 +186,14 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
 
   function resetTimer() {
     pauseTimer()
-    const duration = isBreak.value ? BREAK_DURATION.value : WORK_DURATION.value
+    let duration
+    if (isLongBreak.value) {
+      duration = LONG_BREAK_DURATION.value
+    } else if (isBreak.value) {
+      duration = BREAK_DURATION.value
+    } else {
+      duration = WORK_DURATION.value
+    }
     timeLeft.value = duration
     totalDuration.value = duration
     updateTitle()
@@ -190,15 +210,26 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   function switchSession() {
     pauseTimer()
     
-    if (!isBreak.value) {
+    if (!isBreak.value && !isLongBreak.value) {
+      // Ending a focus session
       focusSessions.value++
       showSessionAlert('focus-end')
-      isBreak.value = true
-      timeLeft.value = BREAK_DURATION.value
-      totalDuration.value = BREAK_DURATION.value
+      
+      // Check if it's time for a long break
+      if (isTimeForLongBreak.value) {
+        isLongBreak.value = true
+        timeLeft.value = LONG_BREAK_DURATION.value
+        totalDuration.value = LONG_BREAK_DURATION.value
+      } else {
+        isBreak.value = true
+        timeLeft.value = BREAK_DURATION.value
+        totalDuration.value = BREAK_DURATION.value
+      }
     } else {
+      // Ending a break (short or long)
       showSessionAlert('break-end')
       isBreak.value = false
+      isLongBreak.value = false
       timeLeft.value = WORK_DURATION.value
       totalDuration.value = WORK_DURATION.value
     }
@@ -212,6 +243,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   function setFocus() {
     pauseTimer()
     isBreak.value = false
+    isLongBreak.value = false
     timeLeft.value = WORK_DURATION.value
     totalDuration.value = WORK_DURATION.value
     updateTitle()
@@ -220,8 +252,18 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   function setBreak() {
     pauseTimer()
     isBreak.value = true
+    isLongBreak.value = false
     timeLeft.value = BREAK_DURATION.value
     totalDuration.value = BREAK_DURATION.value
+    updateTitle()
+  }
+
+  function setLongBreak() {
+    pauseTimer()
+    isBreak.value = false
+    isLongBreak.value = true
+    timeLeft.value = LONG_BREAK_DURATION.value
+    totalDuration.value = LONG_BREAK_DURATION.value
     updateTitle()
   }
 
@@ -242,6 +284,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     timeLeft.value = WORK_DURATION.value
     totalDuration.value = WORK_DURATION.value
     isBreak.value = false
+    isLongBreak.value = false
     isRunning.value = false
     focusSessions.value = 0
     showNotification.value = false
@@ -267,6 +310,15 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     }
   }
 
+  function setLongBreakDuration(minutes: number) {
+    LONG_BREAK_DURATION_MINUTES.value = minutes
+    // If currently in long break mode, update the timer
+    if (isLongBreak.value) {
+      timeLeft.value = LONG_BREAK_DURATION.value
+      totalDuration.value = LONG_BREAK_DURATION.value
+    }
+  }
+
 
 
   return {
@@ -274,12 +326,14 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     timeLeft,
     totalDuration,
     isBreak,
+    isLongBreak,
     isRunning,
     focusSessions,
     showNotification,
     notificationMessage,
     FOCUS_DURATION_MINUTES,
     BREAK_DURATION_MINUTES,
+    LONG_BREAK_DURATION_MINUTES,
     
     // Computed
     minutes,
@@ -288,6 +342,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     focusMinutesTotal,
     focusHours,
     focusMinutes,
+    isTimeForLongBreak,
     
     // Actions
     initializeTitle,
@@ -298,12 +353,14 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
     switchSession,
     setFocus,
     setBreak,
+    setLongBreak,
     showToast,
     showSessionAlert,
     requestNotificationPermission,
     cleanup,
     reset,
     setFocusDuration,
-    setBreakDuration
+    setBreakDuration,
+    setLongBreakDuration
   }
 }) 

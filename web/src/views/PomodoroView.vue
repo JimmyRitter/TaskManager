@@ -52,7 +52,7 @@
                 @click="pomodoroStore.setFocus"
                 :class="[
                   'px-6 py-3 rounded-lg font-semibold transition-all duration-200',
-                  !pomodoroStore.isBreak 
+                  !pomodoroStore.isBreak && !pomodoroStore.isLongBreak
                     ? 'bg-orange-500 text-white shadow-md' 
                     : 'text-gray-600 hover:text-gray-800'
                 ]"
@@ -63,12 +63,23 @@
                 @click="pomodoroStore.setBreak"
                 :class="[
                   'px-6 py-3 rounded-lg font-semibold transition-all duration-200',
-                  pomodoroStore.isBreak 
+                  pomodoroStore.isBreak && !pomodoroStore.isLongBreak
                     ? 'bg-orange-500 text-white shadow-md' 
                     : 'text-gray-600 hover:text-gray-800'
                 ]"
               >
                 Short Break
+              </button>
+              <button
+                @click="pomodoroStore.setLongBreak"
+                :class="[
+                  'px-6 py-3 rounded-lg font-semibold transition-all duration-200',
+                  pomodoroStore.isLongBreak
+                    ? 'bg-orange-500 text-white shadow-md' 
+                    : 'text-gray-600 hover:text-gray-800'
+                ]"
+              >
+                Long Break
               </button>
             </div>
           </div>
@@ -77,7 +88,7 @@
           <div class="text-center mb-8">
             <div class="mb-4">
               <span class="inline-block px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-lg font-semibold">
-                {{ pomodoroStore.isBreak ? 'Break Time' : 'Focus Time' }}
+                {{ pomodoroStore.isLongBreak ? 'Long Break Time' : pomodoroStore.isBreak ? 'Break Time' : 'Focus Time' }}
               </span>
             </div>
             <div class="text-7xl font-mono font-bold text-gray-900 mb-6 tracking-wider">
@@ -107,7 +118,7 @@
                     stroke-width="8"
                     fill="none"
                     stroke-linecap="round"
-                    :class="pomodoroStore.isBreak ? 'text-blue-500' : 'text-orange-500'"
+                    :class="pomodoroStore.isLongBreak ? 'text-purple-500' : pomodoroStore.isBreak ? 'text-blue-500' : 'text-orange-500'"
                     :stroke-dasharray="circumference"
                     :stroke-dashoffset="strokeDashoffset"
                     class="transition-all duration-1000 ease-out"
@@ -191,7 +202,7 @@
               </div>
               <div>
                 <h4 class="font-semibold text-gray-900 mb-1">Repeat</h4>
-                <p>Continue the cycle. After 4 sessions, take a longer 15-30 minute break.</p>
+                <p>Continue the cycle. After 4 focus sessions, take a {{ pomodoroStore.LONG_BREAK_DURATION_MINUTES }}-minute long break.</p>
               </div>
             </div>
             <div class="flex items-start space-x-3">
@@ -245,6 +256,15 @@ onMounted(() => {
 function setTestDurations(focusMinutes: number, breakMinutes: number) {
   pomodoroStore.setFocusDuration(focusMinutes)
   pomodoroStore.setBreakDuration(breakMinutes)
+  
+  // Set long break duration based on the preset
+  if (focusMinutes === 10/60) {
+    // 10s testing mode gets 10s long break
+    pomodoroStore.setLongBreakDuration(10/60)
+  } else {
+    // Default mode gets 30min long break
+    pomodoroStore.setLongBreakDuration(30)
+  }
 }
 
 // Check if current durations match the given preset
