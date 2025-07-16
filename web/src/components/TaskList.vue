@@ -123,7 +123,7 @@
         <textarea
           ref="taskInput"
           v-model="newTaskDescription"
-          placeholder="Enter task description..."
+          placeholder="Enter task description... (Press Enter to add, Esc to finish)"
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm resize-none overflow-hidden"
           rows="1"
           style="min-height: 2.5rem; word-wrap: break-word; white-space: pre-wrap; line-height: 1.25;"
@@ -136,7 +136,7 @@
             class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 text-sm font-medium"
             :disabled="!newTaskDescription.trim()"
           >
-            Add
+            Add Task
           </button>
           <button
             @click="cancelAddTask"
@@ -237,9 +237,17 @@ async function createTask() {
     
     await createTaskService(taskRequest)
     
-    // Reset state
-    showTaskInput.value = false
+    // Keep input active for continuous task addition
+    // showTaskInput.value = false // Removed this line
     newTaskDescription.value = ''
+    
+    // Refocus on the input field for immediate next task entry
+    nextTick(() => {
+      if (taskInput.value) {
+        taskInput.value.focus()
+        resizeTextarea(taskInput.value)
+      }
+    })
     
     // Notify parent to refresh data
     emit('task-updated')
