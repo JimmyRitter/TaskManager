@@ -183,6 +183,8 @@ interface Emits {
   (e: 'task-reordered', movedTask: { taskId: string, newOrder: number }): void
   (e: 'task-deleted', taskId: string): void
   (e: 'task-delete-failed', taskId: string): void
+  (e: 'task-created', task: Task): void
+  (e: 'task-create-failed', tempTaskId: string): void
 }
 
 const props = defineProps<Props>()
@@ -228,31 +230,50 @@ function startAddTask() {
 async function createTask() {
   if (!newTaskDescription.value.trim()) return
   
+  // Generate temporary task for optimistic update
+  const tempTaskId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const newOrder = props.tasks.length // Next available order
+  
+  const optimisticTask: Task & { listId: string } = {
+    id: tempTaskId,
+    description: newTaskDescription.value.trim(),
+    isCompleted: false,
+    order: newOrder,
+    createdAt: new Date().toISOString(),
+    listId: props.listId
+  }
+  
+  // Optimistic update: immediately add task to UI
+  emit('task-created', optimisticTask)
+  
+  // Keep input active for continuous task addition
+  const savedDescription = newTaskDescription.value.trim()
+  newTaskDescription.value = ''
+  
+  // Refocus on the input field for immediate next task entry
+  nextTick(() => {
+    if (taskInput.value) {
+      taskInput.value.focus()
+      resizeTextarea(taskInput.value)
+    }
+  })
+  
   try {
+    // Make API call in background
     const taskRequest: CreateTaskRequest = {
-      description: newTaskDescription.value.trim(),
+      description: savedDescription,
       priority: TaskPriority.Medium,
       listId: props.listId
     }
     
     await createTaskService(taskRequest)
     
-    // Keep input active for continuous task addition
-    // showTaskInput.value = false // Removed this line
-    newTaskDescription.value = ''
-    
-    // Refocus on the input field for immediate next task entry
-    nextTick(() => {
-      if (taskInput.value) {
-        taskInput.value.focus()
-        resizeTextarea(taskInput.value)
-      }
-    })
-    
-    // Notify parent to refresh data
-    emit('task-updated')
+    // Success! Keep the optimistic task in place
+    // The real task data will be fetched during the next natural refresh cycle
   } catch (e) {
-    alert('Failed to create task')
+    // API call failed - revert optimistic update
+    emit('task-create-failed', tempTaskId)
+    alert('Failed to create task. Please try again.')
   }
 }
 

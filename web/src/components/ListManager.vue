@@ -64,6 +64,8 @@
               @task-reordered="updateTaskOrder"
               @task-deleted="handleTaskDeleted"
               @task-delete-failed="handleTaskDeleteFailed"
+              @task-created="handleTaskCreated"
+              @task-create-failed="handleTaskCreateFailed"
             />
           </div>
 
@@ -294,6 +296,59 @@ function handleTaskDeleteFailed(taskId: string) {
   
   // Clean up stored deleted task
   deletedTasks.value.delete(taskId)
+}
+
+// Store created tasks temporarily for potential removal on failure
+const createdTasks = ref<Map<string, { task: any, listId: string }>>(new Map())
+
+// Handle optimistic task creation
+function handleTaskCreated(task: any) {
+  // Find the list to add the task to using the task's listId
+  const targetList = lists.value.find(list => list.id === task.listId)
+  
+  if (!targetList) {
+    console.error('Could not find list to add task to')
+    return
+  }
+
+  // Store the task for potential removal
+  createdTasks.value.set(task.id, { task: task, listId: targetList.id })
+  
+  // Add task to the list immediately (optimistic)
+  if (!targetList.tasks) {
+    targetList.tasks = []
+  }
+  targetList.tasks.push(task)
+  
+  // Sort tasks by order to maintain proper sequence
+  targetList.tasks.sort((a: any, b: any) => a.order - b.order)
+}
+
+// Handle failed task creation - remove the optimistic task
+function handleTaskCreateFailed(tempTaskId: string) {
+  const createdTaskData = createdTasks.value.get(tempTaskId)
+  
+  if (!createdTaskData) {
+    console.error('Could not find created task data to remove')
+    return
+  }
+
+  // Find the list to remove the task from
+  const listToUpdate = lists.value.find(list => list.id === createdTaskData.listId)
+  
+  if (!listToUpdate || !listToUpdate.tasks) {
+    console.error('Could not find list to remove failed task from')
+    return
+  }
+
+  // Remove the failed task from the list
+  const taskIndex = listToUpdate.tasks.findIndex((task: any) => task.id === tempTaskId)
+  if (taskIndex !== -1) {
+    listToUpdate.tasks.splice(taskIndex, 1)
+  }
+  
+  // Clean up stored created task
+  createdTasks.value.delete(tempTaskId)
 }
 </script>
 
