@@ -87,8 +87,8 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const WORK_DURATION = pomodoroStore.FOCUS_DURATION * 60
-const BREAK_DURATION = 5 * 60
+const WORK_DURATION = computed(() => pomodoroStore.FOCUS_DURATION_MINUTES * 60)
+const BREAK_DURATION = computed(() => pomodoroStore.BREAK_DURATION_MINUTES * 60)
 
 // Widget should only show if:
 // 1. User is authenticated
@@ -97,7 +97,7 @@ const BREAK_DURATION = 5 * 60
 const shouldShowWidget = computed(() => {
   const isAuthenticated = !!authStore.user
   const timerHasBeenStarted = pomodoroStore.isRunning || 
-    pomodoroStore.timeLeft < (pomodoroStore.isBreak ? BREAK_DURATION : WORK_DURATION)
+    pomodoroStore.timeLeft < (pomodoroStore.isBreak ? BREAK_DURATION.value : WORK_DURATION.value)
   const isNotOnPomodoroPage = route.name !== 'pomodoro'
   
   return isAuthenticated && timerHasBeenStarted && isNotOnPomodoroPage

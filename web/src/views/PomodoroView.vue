@@ -14,6 +14,37 @@
       <!-- Main Timer Card -->
       <div class="max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <!-- Testing Controls (Development Only) -->
+          <div v-if="isDevelopment" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <h4 class="text-sm font-medium text-yellow-800 mb-3">🧪 Testing Mode</h4>
+            <div class="flex flex-wrap gap-2 justify-center">
+              <button
+                @click="setTestDurations(10/60, 5/60)"
+                :class="[
+                  'px-3 py-1 rounded text-xs transition-colors',
+                  isSelectedDuration(10/60, 5/60) 
+                    ? 'bg-yellow-200 text-yellow-900 border-2 border-yellow-400' 
+                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                ]"
+              >
+                10s / 5s
+              </button>
+              <button
+                @click="setTestDurations(25, 5)"
+                :class="[
+                  'px-3 py-1 rounded text-xs transition-colors',
+                  isSelectedDuration(25, 5) 
+                    ? 'bg-yellow-200 text-yellow-900 border-2 border-yellow-400' 
+                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                ]"
+              >
+                25min / 5min (default)
+              </button>
+            </div>
+          </div>
+
+
+
           <!-- Session Type Selector -->
           <div class="flex justify-center mb-8">
             <div class="bg-gray-100 p-1 rounded-xl flex">
@@ -142,7 +173,7 @@
               </div>
               <div>
                 <h4 class="font-semibold text-gray-900 mb-1">Work Session</h4>
-                <p>Focus on a single task for {{ pomodoroStore.FOCUS_DURATION }} minutes without distractions.</p>
+                <p>Focus on a single task for {{ pomodoroStore.FOCUS_DURATION_MINUTES }} minutes without distractions.</p>
               </div>
             </div>
             <div class="flex items-start space-x-3">
@@ -192,6 +223,9 @@ import { usePomodoroStore } from '@/stores/pomodoro'
 
 const pomodoroStore = usePomodoroStore()
 
+// Check if we're in development mode
+const isDevelopment = computed(() => import.meta.env.DEV)
+
 // Progress calculation for the circular progress bar
 const circumference = 2 * Math.PI * 54 // radius = 54
 const strokeDashoffset = computed(() => {
@@ -200,5 +234,24 @@ const strokeDashoffset = computed(() => {
 
 onMounted(() => {
   pomodoroStore.initializeTitle()
+  
+  // Auto-request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    pomodoroStore.requestNotificationPermission()
+  }
 })
+
+// Helper function to set test durations
+function setTestDurations(focusMinutes: number, breakMinutes: number) {
+  pomodoroStore.setFocusDuration(focusMinutes)
+  pomodoroStore.setBreakDuration(breakMinutes)
+}
+
+// Check if current durations match the given preset
+function isSelectedDuration(focusMinutes: number, breakMinutes: number) {
+  return Math.abs(pomodoroStore.FOCUS_DURATION_MINUTES - focusMinutes) < 0.01 &&
+         Math.abs(pomodoroStore.BREAK_DURATION_MINUTES - breakMinutes) < 0.01
+}
+
+
 </script> 
