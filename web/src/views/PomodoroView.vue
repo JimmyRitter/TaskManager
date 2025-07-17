@@ -30,6 +30,17 @@
                 10s / 5s
               </button>
               <button
+                @click="setTestDurations(1, 1)"
+                :class="[
+                  'px-3 py-1 rounded text-xs transition-colors',
+                  isSelectedDuration(1, 1) 
+                    ? 'bg-yellow-200 text-yellow-900 border-2 border-yellow-400' 
+                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                ]"
+              >
+                1min / 1min
+              </button>
+              <button
                 @click="setTestDurations(25, 5)"
                 :class="[
                   'px-3 py-1 rounded text-xs transition-colors',
@@ -261,6 +272,9 @@ function setTestDurations(focusMinutes: number, breakMinutes: number) {
   if (focusMinutes === 10/60) {
     // 10s testing mode gets 10s long break
     pomodoroStore.setLongBreakDuration(10/60)
+  } else if (focusMinutes === 1) {
+    // 1min testing mode gets 1min long break
+    pomodoroStore.setLongBreakDuration(1)
   } else {
     // Default mode gets 30min long break
     pomodoroStore.setLongBreakDuration(30)
